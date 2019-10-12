@@ -2,142 +2,91 @@
 
 import argparse
 import glob
+import logging
 import os
+import sys
 
-import imageio
-
-from PIL import Image, ImageDraw, ImageFont
-from numpy import array
-
-
-# board
-BOARD_EDGE = 480
-SQUARE_EDGE = BOARD_EDGE // 8
-# text font
-FONT_SIZE = 15
-BOARD_MARGIN = 20
+from chess import DEFAULT_STATE, ROWS, COLUMNS
+from chess.board import Board
+from chess.files import load_state_from_file
 
 
-def create_gif(pgn, output_dir, out_name, duration):
-    board_image = initial_board.copy()
-    images = [array(board_image)]
-    imageio.mimsave(os.path.join(output_dir, out_name), images, duration=duration)
+logger = logging.getLogger('ROOT')
 
 
-def process_file(pgn, duration, output_dir):
-    filename, extension = os.path.splitext(os.path.basename(pgn))
-    name = filename + '.gif'
-    if name in os.listdir(output_dir):
-        print('gif with name %s already exists.' % name)
-    else:
-        print('creating', name, end='...\n')
-        create_gif(pgn, output_dir, name, duration)
-        print('done')
+def load_state(arg):
+    valid_params = ('empty', 'default')
+
+    state = {c + r: '' for c in COLUMNS for r in ROWS}
+    current_state = {}
+
+    if os.path.isfile(arg):
+        logger.debug('using init state by file')
+        current_state = load_state_from_file(arg)
+    elif arg not in valid_params:
+        logger.warning('init_state should be one of [%s]', ' | '.join(valid_params))
+        logger.debug('using empty state')
+    elif arg == 'default':
+        logger.debug('using default state')
+        current_state = DEFAULT_STATE
+
+    for cord, tp in current_state.items():
+        state[cord] = tp
+
+    return state
 
 
-def clear(image, crd):
-    global white_square, black_square
+def parse_args():
+    # logging setup.
+    default_handler = logging.StreamHandler()
+    default_handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    ))
+    logger.addHandler(default_handler)
 
-    if (crd[0] < BOARD_EDGE + BOARD_MARGIN) and (crd[1] < BOARD_EDGE + BOARD_MARGIN):
-        if (crd[0] + crd[1] - 2 * BOARD_MARGIN) % (SQUARE_EDGE * 2) == 0:
-            image.paste(white_square, crd, white_square)
-        else:
-            image.paste(black_square, crd, black_square)
-
-
-def generate_board():
-    global initial_board, ttfont
-    global bk, bq, bb, bn, br, bp, wk, wq, wb, wn, wr, wp
-
-    for i in range(0 + BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN, SQUARE_EDGE):
-        for j in range(0 + BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN, SQUARE_EDGE):
-            clear(initial_board, (i, j))
-
-    row = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
-    order = ('b', 'w')
-
-    # show chess.
-    for i in range(8):
-        col = SQUARE_EDGE * i
-        # draw rock, knight, bishop, queen and king.
-        exec('initial_board.paste({0}, (col + BOARD_MARGIN, 0 + BOARD_MARGIN), {0})'.format(order[0] + row[i]))
-        exec('initial_board.paste({0}, (col + BOARD_MARGIN, BOARD_MARGIN + BOARD_EDGE - SQUARE_EDGE), {0})'.format(order[1] + row[i]))
-        # draw pawn.
-        exec('initial_board.paste({0}p, (col + BOARD_MARGIN, BOARD_MARGIN + SQUARE_EDGE), {0}p)'.format(order[0]))
-        exec('initial_board.paste({0}p, (col + BOARD_MARGIN, BOARD_MARGIN + BOARD_EDGE - (SQUARE_EDGE * 2)), {0}p)'.format(order[1]))
-
-    draw = ImageDraw.Draw(initial_board)
-    # write text.
-    for i in range(8):
-        col = SQUARE_EDGE * i
-        text = chr(ord('a') + i)
-        width, height = ttfont.getsize(text)
-        padding_vert = (BOARD_MARGIN - height) // 2
-        padding_hor = (SQUARE_EDGE - width) // 2
-        # draw top 'a' to 'h'
-        draw.text((col + BOARD_MARGIN + padding_hor, padding_vert), text, fill=(255, 255, 255), font=ttfont)
-        # draw bottom 'a' to 'h'
-        draw.text((col + BOARD_MARGIN + padding_hor, BOARD_EDGE + BOARD_MARGIN), text, fill=(255, 255, 255), font=ttfont)
-
-        text = chr(ord('8') - i)
-        width, height = ttfont.getsize(text)
-        padding_vert = (BOARD_MARGIN - height) // 2
-        padding_hor = (SQUARE_EDGE - width) // 2
-        # draw left '1' to '8'
-        draw.text((BOARD_MARGIN - padding_vert - width, BOARD_MARGIN + col + padding_hor), text, fill=(255, 255, 255), font=ttfont)
-        draw.text((BOARD_EDGE + BOARD_MARGIN + padding_vert, BOARD_MARGIN + col + padding_hor), text, fill=(255, 255, 255), font=ttfont)
-
-
-def init(args):
-    # initialize board and font.
-    global initial_board, ttfont
-    initial_board = Image.new('RGB', (BOARD_EDGE + 2 * BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN))
-    ttfont = ImageFont.truetype('/Library/Fonts/Arial.ttf', FONT_SIZE)
-    # initialize black and white squares.
-    global white_square, black_square
-    white_square = Image.new('RGBA', (SQUARE_EDGE, SQUARE_EDGE), args.white)
-    black_square = Image.new('RGBA', (SQUARE_EDGE, SQUARE_EDGE), args.black)
-
-    # load chess images
-    global bk, bq, bb, bn, br, bp, wk, wq, wb, wn, wr, wp
-    bk = Image.open(os.path.join(args.asset, 'bk.png'))
-    bq = Image.open(os.path.join(args.asset, 'bq.png'))
-    bb = Image.open(os.path.join(args.asset, 'bb.png'))
-    bn = Image.open(os.path.join(args.asset, 'bn.png'))
-    br = Image.open(os.path.join(args.asset, 'br.png'))
-    bp = Image.open(os.path.join(args.asset, 'bp.png'))
-
-    wk = Image.open(os.path.join(args.asset, 'wk.png'))
-    wq = Image.open(os.path.join(args.asset, 'wq.png'))
-    wb = Image.open(os.path.join(args.asset, 'wb.png'))
-    wn = Image.open(os.path.join(args.asset, 'wn.png'))
-    wr = Image.open(os.path.join(args.asset, 'wr.png'))
-    wp = Image.open(os.path.join(args.asset, 'wp.png'))
-
-
-def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
-    parser.add_argument('-a', '--asset', help='path to the asset folder', default=os.path.join(os.getcwd(), 'asset'))
+    parser.add_argument('-i', '--init_state', help='initialize board state: empty, default, or the target state file path', default='default')
     parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.0)
     parser.add_argument('-o', '--out', help='name of the output folder', default=os.getcwd())
     parser.add_argument('--black', help='color of the black in hex', default='#4B7399')
     parser.add_argument('--white', help='color of the white in hex', default='#EAE9D2')
+    parser.add_argument('--font_path', help='path of the display font used in board', default='/Library/Fonts/Arial.ttf')
+    parser.add_argument('-L','--level', choices=('debug', 'info', 'warn'), help='log level: debug, info', default='info')
+    parser.add_argument('-V','--version', help='print version information', action='store_true')
     args = parser.parse_args()
 
-    init(args)
+    if args.version:
+        print('Build dynamic GIF picture of Chess Game, version 1.0')
+        sys.exit(0)
 
+    if args.level == 'debug':
+        logger.setLevel(logging.DEBUG)
+    elif args.level == 'warn':
+        logger.setLevel(logging.WARNING)
+    else:
+        logger.setLevel(logging.INFO)
+
+    return args
+
+
+def main():
+    args = parse_args()
+
+    logger.debug('load state')
+    state = load_state(args.init_state)
+
+    logger.debug('create chess board')
+    board = Board(args.white, args.black, args.font_path)
+
+    logger.debug('initialize board state')
+    board.init_board(state)
+
+    logger.debug('render picture')
     if not args.path:
-        print('Please specify path or directory of png files')
+        board.render(args.out, args.delay)
 
-    generate_board()
-
-    for path in args.path:
-        if os.path.isfile(path):
-            process_file(path, args.delay, args.out)
-        elif os.path.isdir(path):
-            for pgn in glob.glob(path + '/*.pgn'):
-                process_file(pgn, args.delay, args.out)
+    logger.debug('finish')
 
 
 if __name__ == '__main__':
