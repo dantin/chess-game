@@ -38,5 +38,4 @@ DEFAULT_STATE = {
 # COLUMNS is in [a-h]
 COLUMNS = [chr(ord('a') + i) for i in range(8)]
 # ROWS is in [1-8]
-COLUMNS = [chr(ord('a') + i) for i in range(8)]
 ROWS = [chr(ord('1') + i) for i in range(8)]

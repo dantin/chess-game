@@ -8,6 +8,9 @@ import imageio
 from PIL import Image, ImageDraw, ImageFont
 from numpy import array
 
+from .files import load_moves_from_file
+from .game import Game
+
 
 logger = logging.getLogger('ROOT')
 
@@ -69,6 +72,8 @@ class Board():
                     col = self.SQUARE_EDGE * abs(ord(j) - ord('8'))
                     img = self.chesspieces[init_state[pos]]
                     self.initial_board.paste(img, (row + self.BOARD_MARGIN, col + self.BOARD_MARGIN), img)
+
+        self.game = Game(init_state)
     
         # draw text.
         logger.debug('draw cord text on board margins')
@@ -99,9 +104,35 @@ class Board():
                 (self.BOARD_EDGE + self.BOARD_MARGIN + padding_vert, self.BOARD_MARGIN + col + padding_hor),
                 text, fill=(255, 255, 255), font=self.ttfont)
 
+    def _coordinates_of_square(self, crd):
+        c = ord(crd[0]) - ord('a')
+        r = int(crd[1]) - 1
+        return (c * self.SQUARE_EDGE + self.BOARD_MARGIN, (7 - r) * self.SQUARE_EDGE + self.BOARD_MARGIN)
+
+
+    def _apply_move(self, board_image, current, previous):
+        changed = [s for s in current.keys() if current[s] != previous[s]]
+
+        for square in changed:
+            crd = self._coordinates_of_square(square)
+            self._clear(board_image, crd)
+
+            if current[square] != '':
+                pt = current[square]
+                img = self.chesspieces[pt]
+                board_image.paste(img, crd, img)
+
     def _create_gif(self, filename, moves, duration):
         board_image = self.initial_board.copy()
         images = [array(board_image)]
+
+        for move in moves:
+            logger.debug('move %s', move)
+            previous = self.game.state.copy()
+            self.game.push(move)
+            self._apply_move(board_image, self.game.state, previous)
+            images.append(array(board_image))
+
         imageio.mimsave(filename, images, duration=duration)
 
     def render(self, output_dir, duration, pgn=None):
@@ -111,8 +142,7 @@ class Board():
         else:
             filename, extension = os.path.splitext(os.path.basename(pgn))
             name = filename + '.gif'
-            # TODO: load png
-            moves = []
+            moves = load_moves_from_file(pgn)
         if name in os.listdir(output_dir):
             logger.info('gif with name "%s" already exists, skip', name)
         else:
