@@ -47,7 +47,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
     parser.add_argument('-i', '--init_state', help='initialize board state: empty, default, or the target state file path', default='default')
-    parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.0)
+    parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.6)
     parser.add_argument('-o', '--out', help='name of the output folder', default=os.getcwd())
     parser.add_argument('--black', help='color of the black in hex', default='#4B7399')
     parser.add_argument('--white', help='color of the white in hex', default='#EAE9D2')
@@ -85,6 +85,10 @@ def main():
     logger.debug('render picture')
     if not args.path:
         board.render(args.out, args.delay)
+
+    for path in args.path:
+        if os.path.isfile(path):
+            board.render(args.out, args.delay, path)
 
     logger.debug('finish')
 
