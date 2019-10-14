@@ -9,7 +9,7 @@ import imageio
 from PIL import Image, ImageDraw, ImageFont
 from numpy import array
 
-from .files import load_moves_from_file
+from .codec import load_moves_from_file
 from .game import Game
 from . import COLORS, PIECES
 
@@ -55,9 +55,9 @@ class Board(): # pylint: disable=too-few-public-methods
         self.ttfont = ImageFont.truetype(font_path, FONT_SIZE)
 
         # load chess images, king, queen, bishop, knight, rock and pawn.
-        chess_icon_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'asset')
-        LOGGER.debug('setup chess icon by loading images from path "%s"', chess_icon_dir)
-        self.chesspieces = {c + p: Image.open(os.path.join(chess_icon_dir, c + p + '.png'))
+        icons_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'asset')
+        LOGGER.debug('setup chess icon by loading images from path "%s"', icons_dir)
+        self.chesspieces = {c + p: Image.open(os.path.join(icons_dir, c + p + '.png'))
                             for c in COLORS for p in PIECES}
         self.game = Game(init_state)
 

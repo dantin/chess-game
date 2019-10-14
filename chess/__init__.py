@@ -8,48 +8,53 @@ A library which is used for chess game GIF generation.
 
 """
 
+# chesspieces
+KING, QUEEN, BISHOP, KNIGHT, ROCK, PAWN = 'k', 'q', 'b', 'n', 'r', 'p'
+# COLORS
+BLACK, WHITE = 'b', 'w'
+
+# COLORS stands for `black` and `white`.
+COLORS = (BLACK, WHITE)
+# PIECES stands for chesspiece, which are `king`, `queen`, `bishop`, `knight`, `rock` and `pawn`.
+PIECES = (KING, QUEEN, BISHOP, KNIGHT, ROCK, PAWN)
+
 # DEFAULT_STATE is the default state of a chess game.
 DEFAULT_STATE = {
-    'a8': 'br',
-    'b8': 'bn',
-    'c8': 'bb',
-    'd8': 'bq',
-    'e8': 'bk',
-    'f8': 'bb',
-    'g8': 'bn',
-    'h8': 'br',
-    'a7': 'bp',
-    'b7': 'bp',
-    'c7': 'bp',
-    'd7': 'bp',
-    'e7': 'bp',
-    'f7': 'bp',
-    'g7': 'bp',
-    'h7': 'bp',
-    'a2': 'wp',
-    'b2': 'wp',
-    'c2': 'wp',
-    'd2': 'wp',
-    'e2': 'wp',
-    'f2': 'wp',
-    'g2': 'wp',
-    'h2': 'wp',
-    'a1': 'wr',
-    'b1': 'wn',
-    'c1': 'wb',
-    'd1': 'wq',
-    'e1': 'wk',
-    'f1': 'wb',
-    'g1': 'wn',
-    'h1': 'wr'
+    'a8': BLACK + ROCK,
+    'b8': BLACK + KNIGHT,
+    'c8': BLACK + BISHOP,
+    'd8': BLACK + QUEEN,
+    'e8': BLACK + KING,
+    'f8': BLACK + BISHOP,
+    'g8': BLACK + KNIGHT,
+    'h8': BLACK + ROCK,
+    'a7': BLACK + PAWN,
+    'b7': BLACK + PAWN,
+    'c7': BLACK + PAWN,
+    'd7': BLACK + PAWN,
+    'e7': BLACK + PAWN,
+    'f7': BLACK + PAWN,
+    'g7': BLACK + PAWN,
+    'h7': BLACK + PAWN,
+    'a2': WHITE + PAWN,
+    'b2': WHITE + PAWN,
+    'c2': WHITE + PAWN,
+    'd2': WHITE + PAWN,
+    'e2': WHITE + PAWN,
+    'f2': WHITE + PAWN,
+    'g2': WHITE + PAWN,
+    'h2': WHITE + PAWN,
+    'a1': WHITE + ROCK,
+    'b1': WHITE + KNIGHT,
+    'c1': WHITE + BISHOP,
+    'd1': WHITE + QUEEN,
+    'e1': WHITE + KING,
+    'f1': WHITE + BISHOP,
+    'g1': WHITE + KNIGHT,
+    'h1': WHITE + ROCK
 }
 
 # COLUMNS is in [`a`, `h`] including.
 COLUMNS = [chr(ord('a') + i) for i in range(8)]
 # ROWS is in [`1`, `8`] including.
 ROWS = [chr(ord('1') + i) for i in range(8)]
-
-# COLORS stands for `black` and `white`.
-COLORS = ('b', 'w')
-# PIECES stands for chesspiece, which are `king`, `queen`, `bishop`, `knight`, `rock` and `pawn`.
-PIECES = ('k', 'q', 'b', 'n', 'r', 'p')

@@ -28,4 +28,4 @@ def load_state_from_file(file_path):
         pairs = re.findall(
             r'[a-h][1-8]=[wb][bknrqp]',
             data)
-        return {p.split('=') for p in pairs}
+        return dict(p.split('=') for p in pairs)

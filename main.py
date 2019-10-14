@@ -10,47 +10,15 @@ import logging
 import os
 import sys
 
-from chess import DEFAULT_STATE, ROWS, COLUMNS
 from chess.board import Board
-from chess.files import load_state_from_file
+from chess.game import load_state
 
 
 LOGGER = logging.getLogger('ROOT')
 
 
-def load_state(arg):
-    """
-    load_state
-
-    Load state using argument.
-    """
-    valid_params = ('empty', 'default')
-
-    state = {c + r: '' for c in COLUMNS for r in ROWS}
-    current_state = {}
-
-    if os.path.isfile(arg):
-        LOGGER.debug('using init state by file')
-        current_state = load_state_from_file(arg)
-    elif arg not in valid_params:
-        LOGGER.warning('init_state should be one of [%s]', ' | '.join(valid_params))
-        LOGGER.debug('using empty state')
-    elif arg == 'default':
-        LOGGER.debug('using default state')
-        current_state = DEFAULT_STATE
-
-    for pos, piece in current_state.items():
-        state[pos] = piece
-
-    return state
-
-
 def init():
-    """
-    init
-
-    script initialization.
-    """
+    """ init runs initialization."""
     # logging setup.
     default_handler = logging.StreamHandler()
     default_handler.setFormatter(logging.Formatter(
@@ -60,11 +28,7 @@ def init():
 
 
 def parse_args():
-    """
-    parse_args
-
-    parses command line arguments.
-    """
+    """parse_args parses command line arguments."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
@@ -96,11 +60,7 @@ def parse_args():
 
 
 def main():
-    """
-    main
-
-    The main function.
-    """
+    """The main function."""
     init()
     args = parse_args()
 
