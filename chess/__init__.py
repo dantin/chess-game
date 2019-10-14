@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
+"""chess
 
+A library which is used for chess game GIF generation.
+
+:copyright: @ 2019 by dantin.
+:liencse: BSD
+
+"""
+
+# DEFAULT_STATE is the default state of a chess game.
 DEFAULT_STATE = {
     'a8': 'br',
     'b8': 'bn',
@@ -35,7 +44,12 @@ DEFAULT_STATE = {
     'h1': 'wr'
 }
 
-# COLUMNS is in [a-h]
+# COLUMNS is in [`a`, `h`] including.
 COLUMNS = [chr(ord('a') + i) for i in range(8)]
-# ROWS is in [1-8]
+# ROWS is in [`1`, `8`] including.
 ROWS = [chr(ord('1') + i) for i in range(8)]
+
+# COLORS stands for `black` and `white`.
+COLORS = ('b', 'w')
+# PIECES stands for chesspiece, which are `king`, `queen`, `bishop`, `knight`, `rock` and `pawn`.
+PIECES = ('k', 'q', 'b', 'n', 'r', 'p')

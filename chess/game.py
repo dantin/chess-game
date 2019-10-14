@@ -1,48 +1,63 @@
 # -*- coding: utf-8 -*-
+"""game module contains classes and functions which represents a chess game."""
+
+import logging
 
 from . import COLUMNS
 
 
-class Game():
+LOGGER = logging.getLogger('ROOT')
+
+
+def check_knight_move(lhs, rhs):
+    """check_knight_move checks whether a knight move is ok."""
+    col_diff = abs(ord(lhs[0]) - ord(rhs[0]))
+    row_diff = abs(int(lhs[1]) - int(rhs[1]))
+    return (col_diff == 2 and row_diff == 1) or (col_diff == 1 and row_diff == 2)
+
+
+def check_line(state, lhs, rhs):
+    """check_line checks whether a line move is ok."""
+    row_1, col_1 = int(lhs[1]), lhs[0]
+    row_2, col_2 = int(rhs[1]), rhs[0]
+
+    if row_1 == row_2:
+        i1, i2 = ord(col_1) - ord('a'), ord(col_2) - ord('a') # pylint: disable=invalid-name
+        return all(state[COLUMNS[i] + str(row_1)] == ''
+                   for i in range(min(i1, i2) + 1, max(i1, i2)))
+    if col_1 == col_2:
+        return all(state[col_1 + str(i)] == ''
+                   for i in range(min(row_1, row_2) + 1, max(row_1, row_2)))
+
+    return False
+
+
+def check_diagonal(state, lhs, rhs):
+    """check_line checks whether a diagonal move is ok."""
+    row_1, col_1 = int(lhs[1]), ord(lhs[0]) - ord('a')
+    row_2, col_2 = int(rhs[1]), ord(rhs[0]) - ord('a')
+    if abs(col_1 - col_2) == abs(row_1 - row_2):
+        if (col_1 > col_2 and row_1 > row_2) or (col_2 > col_1 and row_2 > row_1):
+            min_c = min(col_1, col_2)
+            min_r = min(row_1, row_2)
+            return all(state[COLUMNS[min_c + i] + str(min_r + i)] == ''
+                       for i in range(1, abs(col_1 - col_2)))
+        if col_1 > col_2 and row_2 > row_1:
+            return all(state[COLUMNS[col_2 + i] + str(row_2 - i)] == ''
+                       for i in range(1, col_1 - col_2))
+        return all(state[COLUMNS[col_2 - i] + str(row_2 + i)] == ''
+                   for i in range(1, col_2 - col_1))
+
+    return False
+
+
+class Game(): # pylint: disable=too-few-public-methods
+    """Game is a class that represents chess game."""
+    # pylint: disable=invalid-name
 
     def __init__(self, state):
         self.is_white_run = True
         self.state = state
-
-    def _check_knight_move(self, sqr1, sqr2):
-        cd = abs(ord(sqr1[0]) - ord(sqr2[0]))
-        rd = abs(int(sqr1[1]) - int(sqr2[1]))
-        return (cd == 2 and rd == 1) or (cd == 1 and rd == 2)
-
-    def _check_line(self, sqr1, sqr2):
-        c1 = sqr1[0]
-        c2 = sqr2[0]
-        r1 = int(sqr1[1])
-        r2 = int(sqr2[1])
-        if r1 == r2:
-            i1, i2 = ord(c1) - ord('a'), ord(c2) - ord('a')
-            return all(self.state[COLUMNS[i] + str(r1)] == '' for i in range(min(i1, i2) + 1, max(i1, i2)))
-        elif c1 == c2:
-            return all(self.state[c1 + str(i)] == '' for i in range(min(r1, r2) + 1, max(r1, r2)))
-
-        return False
-
-    def _check_diagonal(self, sqr1, sqr2):
-        c1 = ord(sqr1[0]) - ord('a')
-        c2 = ord(sqr2[0]) - ord('a')
-        r1 = int(sqr1[1])
-        r2 = int(sqr2[1])
-        if abs(c1 - c2) == abs(r1 - r2):
-            if c1 > c2 and r1 > r2 or c2 > c1 and r2 > r1:
-                min_c = min(c1, c2)
-                min_r = min(r1, r2)
-                return all(self.state[COLUMNS[min_c + i] + str(min_r + i)] == '' for i in range(1, abs(c1 - c2)))
-            elif c1 > c2 and r2 > r1:
-                return all(self.state[COLUMNS[c2 + i] + str(r2 - i)] == '' for i in range(1, c1 - c2))
-            else:
-                return all(self.state[COLUMNS[c2 - i] + str(r2 + i)] == '' for i in range(1, c2 - c1))
-
-        return False
 
     def _update_state(self, src, dest, pt):
         self.state[src] = ''
@@ -56,13 +71,17 @@ class Game():
         key = '' if len(move) == 3 else move[1]
 
         if p == 'r':
-            return next(s for s, pt in self.state.items() if pt == piece and key in s and self._check_line(s, to))
-        elif p == 'b':
-            return next(s for s, pt in self.state.items() if pt == piece and key in s and self._check_diagonal(s, to))
-        elif p == 'n':
-            return next(s for s, pt in self.state.items() if pt == piece and key in s and self._check_knight_move(s, to))
-        else:
-            return next(s for s, pt in self.state.items() if pt == piece and key in s and (self._check_line(s, to) or self._check_diagonal(s, to)))
+            return next(s for s, pt in self.state.items()
+                        if pt == piece and key in s and check_line(self.state, s, to))
+        if p == 'b':
+            return next(s for s, pt in self.state.items()
+                        if pt == piece and key in s and check_diagonal(self.state, s, to))
+        if p == 'n':
+            return next(s for s, pt in self.state.items()
+                        if pt == piece and key in s and check_knight_move(s, to))
+        return next(s for s, pt in self.state.items()
+                    if pt == piece and key in s and (check_line(self.state, s, to) or
+                                                     check_diagonal(self.state, s, to)))
 
     def _find_pawn(self, move):
         pt = 'wp' if self.is_white_run else 'bp'
@@ -105,7 +124,8 @@ class Game():
         origin = move[0] + ('7' if self.is_white_run else '2')
         self._update_state(origin, move[-4:-2], pt)
 
-    def push(self, move):
+    def apply(self, move):
+        """apply make move on game."""
         if 'O' in move:
             self._castle(move)
         elif '=' in move:
@@ -118,7 +138,7 @@ class Game():
             else:
                 pt = ('w' if self.is_white_run else 'b') + move[0].lower()
                 origin = self._find_non_pawn(move, dest, pt)
-            
+
             self._update_state(origin, dest, pt)
 
         self.is_white_run = not self.is_white_run

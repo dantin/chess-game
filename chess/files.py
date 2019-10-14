@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+"""files module contains functions that load data from files."""
 
 import logging
 import re
 
 
-logger = logging.getLogger('ROOT')
+LOGGER = logging.getLogger('ROOT')
 
 
 def load_moves_from_file(pgn):
-    logger.debug('load moves from png file "%s"', pgn)
-    with open(pgn) as p:
-        data = p.read()
+    """load_moves_from_file loads moves from pgn file."""
+    LOGGER.debug('load moves from png file "%s"', pgn)
+    with open(pgn) as f: # pylint: disable=invalid-name
+        data = f.read()
         data = re.sub(r'\{.*?\}', '', data)  # remove png comments
         moves = re.findall(
             r'[a-h]x?[a-h]?[1-8]?=?[BKNRQ]?|O-O-?O?|[BKNRQ][a-h1-8]?[a-h1-8]?x?[a-h][1-8]',
@@ -19,10 +21,11 @@ def load_moves_from_file(pgn):
 
 
 def load_state_from_file(file_path):
-    logger.debug('load state from file "%s"', file_path)
-    with open(file_path) as f:
+    """load_state_from_file load initial state from file."""
+    LOGGER.debug('load state from file "%s"', file_path)
+    with open(file_path) as f: # pylint: disable=invalid-name
         data = f.read()
         pairs = re.findall(
             r'[a-h][1-8]=[wb][bknrqp]',
             data)
-        return {k: v for k, v in (p.split('=') for p in pairs)}
+        return {p.split('=') for p in pairs}
