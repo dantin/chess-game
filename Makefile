@@ -3,5 +3,5 @@ DEFAULT: vet
 
 .PHONY: vet
 vet:
-	@echo "analysis python code"
+	@echo "validate python code"
 	@pylint chess
