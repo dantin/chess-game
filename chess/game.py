@@ -1,38 +1,17 @@
 # -*- coding: utf-8 -*-
 """game module contains classes and functions which represents a chess game."""
 
-import os
 import logging
 
 from . import ROWS, COLUMNS
-from .codec import load_state_from_file
 
 
 LOGGER = logging.getLogger('ROOT')
 
 
-def load_state(param):
-    """load_state loads game state."""
-    states_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'state')
-    valid_params = os.listdir(states_dir)
-
-    state = {c + r: '' for c in COLUMNS for r in ROWS}
-
-    if os.path.isfile(param):
-        LOGGER.debug('using init state by file')
-        current_state = load_state_from_file(param)
-    elif param not in valid_params:
-        LOGGER.warning('init_state should be one of [%s]', ' | '.join(valid_params))
-        LOGGER.debug('using empty state')
-        current_state = {}
-    else:
-        LOGGER.debug('using %s state', param)
-        current_state = load_state_from_file(os.path.join(states_dir, param))
-
-    for pos, piece in current_state.items():
-        state[pos] = piece
-
-    return state
+def load_empty_state():
+    """load_empty_state returns an empty board state."""
+    return {c + r: '' for c in COLUMNS for r in ROWS}
 
 
 def check_knight_move(lhs, rhs):

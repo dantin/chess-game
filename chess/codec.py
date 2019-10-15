@@ -4,6 +4,8 @@
 import logging
 import re
 
+import imageio
+
 
 LOGGER = logging.getLogger('ROOT')
 
@@ -29,3 +31,9 @@ def load_state_from_file(file_path):
             r'[a-h][1-8]=[wb][bknrqp]',
             data)
         return dict(p.split('=') for p in pairs)
+
+
+def save_image_to_file(file_path, images, duration):
+    """save_image_to_file dump image serial in GIF format to file."""
+    LOGGER.debug('create GIF image "%s"', file_path)
+    imageio.mimsave(file_path, images, duration=duration)

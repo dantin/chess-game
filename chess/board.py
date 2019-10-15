@@ -4,12 +4,10 @@
 import logging
 import os
 
-import imageio
 
 from PIL import Image, ImageDraw, ImageFont
 from numpy import array
 
-from .codec import load_moves_from_file
 from .game import Game
 from . import COLORS, PIECES
 
@@ -35,7 +33,9 @@ class Board(): # pylint: disable=too-few-public-methods
 
     def __init__(self, init_state,
                  white_color='#EAE9D2', black_color='#4B7399',
-                 font_path='/Library/Fonts/Arial.ttf'):
+                 font_path='/Library/Fonts/Arial.ttf',
+                 verbose=False):
+        self.verbose = verbose
         # initialize black and white squares.
         LOGGER.debug('setup squares by white color "%s", black color "%s"',
                      white_color, black_color)
@@ -43,12 +43,6 @@ class Board(): # pylint: disable=too-few-public-methods
             'RGBA', (SQUARE_EDGE, SQUARE_EDGE), white_color)
         self.black_square = Image.new(
             'RGBA', (SQUARE_EDGE, SQUARE_EDGE), black_color)
-
-        # initialize board.
-        width, height = BOARD_EDGE + 2 * BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN
-        LOGGER.debug('setup board size by width "%s px", height "%s px"', width, height)
-        self.initial_board = Image.new('RGB', (width, height))
-        self.draw = ImageDraw.Draw(self.initial_board)
 
         # initialize font.
         LOGGER.debug('setup font by "%s"', font_path)
@@ -59,6 +53,7 @@ class Board(): # pylint: disable=too-few-public-methods
         LOGGER.debug('setup chess icon by loading images from path "%s"', icons_dir)
         self.chesspieces = {c + p: Image.open(os.path.join(icons_dir, c + p + '.png'))
                             for c in COLORS for p in PIECES}
+
         self.game = Game(init_state)
 
     def _clear(self, image, crd):
@@ -70,11 +65,17 @@ class Board(): # pylint: disable=too-few-public-methods
                 image.paste(self.black_square, crd, self.black_square)
 
     def _init_board(self):
+        # initialize board.
+        width, height = BOARD_EDGE + 2 * BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN
+        LOGGER.debug('setup board size by width "%s px", height "%s px"', width, height)
+        initial_board = Image.new('RGB', (width, height))
+        draw = ImageDraw.Draw(initial_board)
+
         # draw empty board.
         LOGGER.debug('draw empty board squares')
         for i in range(0 + BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN, SQUARE_EDGE):
             for j in range(0 + BOARD_MARGIN, BOARD_EDGE + 2 * BOARD_MARGIN, SQUARE_EDGE):
-                self._clear(self.initial_board, (i, j))
+                self._clear(initial_board, (i, j))
 
         # draw chess.
         for pos, piece in self.game.state.items():
@@ -82,7 +83,7 @@ class Board(): # pylint: disable=too-few-public-methods
                 row = SQUARE_EDGE * (ord(pos[0]) - ord('a'))
                 col = SQUARE_EDGE * (8 - int(pos[1]))
                 img = self.chesspieces[piece]
-                self.initial_board.paste(img, (row + BOARD_MARGIN, col + BOARD_MARGIN), img)
+                initial_board.paste(img, (row + BOARD_MARGIN, col + BOARD_MARGIN), img)
 
         # draw text.
         LOGGER.debug('draw cord text on board margins')
@@ -93,11 +94,11 @@ class Board(): # pylint: disable=too-few-public-methods
             padding_vert = (BOARD_MARGIN - height) // 2
             padding_hor = (SQUARE_EDGE - width) // 2
             # draw top 'a' to 'h'
-            self.draw.text(
+            draw.text(
                 (col + BOARD_MARGIN + padding_hor, padding_vert), text,
                 fill=(255, 255, 255), font=self.ttfont)
             # draw bottom 'a' to 'h'
-            self.draw.text(
+            draw.text(
                 (col + BOARD_MARGIN + padding_hor, BOARD_EDGE + BOARD_MARGIN),
                 text, fill=(255, 255, 255), font=self.ttfont)
 
@@ -106,12 +107,14 @@ class Board(): # pylint: disable=too-few-public-methods
             padding_vert = (BOARD_MARGIN - height) // 2
             padding_hor = (SQUARE_EDGE - width) // 2
             # draw left '1' to '8'
-            self.draw.text(
+            draw.text(
                 (BOARD_MARGIN - padding_vert - width, BOARD_MARGIN + col + padding_hor),
                 text, fill=(255, 255, 255), font=self.ttfont)
-            self.draw.text(
+            draw.text(
                 (BOARD_EDGE + BOARD_MARGIN + padding_vert, BOARD_MARGIN + col + padding_hor),
                 text, fill=(255, 255, 255), font=self.ttfont)
+
+        return initial_board
 
 
     def _apply_move(self, board_image, current, previous):
@@ -126,8 +129,8 @@ class Board(): # pylint: disable=too-few-public-methods
                 img = self.chesspieces[pt]
                 board_image.paste(img, crd, img)
 
-    def _create_gif(self, filename, moves, duration):
-        board_image = self.initial_board.copy()
+    def _create_images(self, initial_board, moves):
+        board_image = initial_board.copy()
         images = [array(board_image)]
 
         for move in moves:
@@ -137,22 +140,22 @@ class Board(): # pylint: disable=too-few-public-methods
             self._apply_move(board_image, self.game.state, previous)
             images.append(array(board_image))
 
-        imageio.mimsave(filename, images, duration=duration)
+        return images
 
-    def render(self, output_dir, duration, pgn=None):
-        """render generate GIF using game."""
+    def _print_state(self):
+        for pos, chesspiece in self.game.state.items():
+            if chesspiece != '':
+                print('{}={}'.format(pos, chesspiece))
+
+    def render(self, moves):
+        """render generate GIF image serial using moves."""
         LOGGER.debug('initialize board state')
-        self._init_board()
+        initial_board = self._init_board()
 
-        if not pgn:
-            name = 'board.gif'
-            moves = []
-        else:
-            filename, _ = os.path.splitext(os.path.basename(pgn))
-            name = filename + '.gif'
-            moves = load_moves_from_file(pgn)
-        if name in os.listdir(output_dir):
-            LOGGER.info('gif with name "%s" already exists, skip', name)
-        else:
-            LOGGER.info('creating "%s"...', name)
-            self._create_gif(os.path.join(output_dir, name), moves, duration)
+        LOGGER.debug('render moves on board')
+        images = self._create_images(initial_board, moves)
+
+        if self.verbose:
+            self._print_state()
+
+        return images
