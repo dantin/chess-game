@@ -60,8 +60,8 @@ class Game(): # pylint: disable=too-few-public-methods
     """Game is a class that represents chess game."""
     # pylint: disable=invalid-name
 
-    def __init__(self, state):
-        self.is_white_run = True
+    def __init__(self, state, is_white_run=True):
+        self.is_white_run = is_white_run
         self.state = state
 
     def _update_state(self, src, dest, pt):
@@ -82,6 +82,7 @@ class Game(): # pylint: disable=too-few-public-methods
             return next(s for s, pt in self.state.items()
                         if pt == piece and key in s and check_diagonal(self.state, s, to))
         if p == 'n':
+            LOGGER.debug("move: %s, to: %s, pt: %s", move, to, piece)
             return next(s for s, pt in self.state.items()
                         if pt == piece and key in s and check_knight_move(s, to))
         return next(s for s, pt in self.state.items()

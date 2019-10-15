@@ -32,10 +32,11 @@ def parse_args():
     parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
     parser.add_argument('-i', '--init_state', default='default',
                         help='initialize board state: empty, default, or target state file path')
-    parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.62)
-    parser.add_argument('-o', '--out', help='name of the output folder', default=os.getcwd())
-    parser.add_argument('--black', help='color of the black in hex', default='#4B7399')
-    parser.add_argument('--white', help='color of the white in hex', default='#EAE9D2')
+    parser.add_argument('-d', '--delay', default=1.62, help='delay between moves in seconds')
+    parser.add_argument('-o', '--out', default=os.getcwd(), help='name of the output folder')
+    parser.add_argument('-b', '--black_first', help='run black first', action='store_true')
+    parser.add_argument('--black', default='#4B7399', help='color of the black in hex')
+    parser.add_argument('--white', default='#EAE9D2', help='color of the white in hex')
     parser.add_argument('--font_path', default='/Library/Fonts/Arial.ttf',
                         help='path of the display font used in board')
     parser.add_argument('-v', '--verbose', help='print final board state', action='store_true')
@@ -97,7 +98,10 @@ def main():
     state_path, state = load_state(args.init_state)
 
     LOGGER.debug('create chess board')
-    board = Board(state, args.white, args.black, args.font_path, args.verbose)
+    board = Board(state, font_path=args.font_path,
+                  white_color=args.white, black_color=args.black,
+                  is_white_run=(not args.black_first),
+                  verbose=args.verbose)
 
     if not args.path:
         name, is_exists = image_name(args.out, state_path)
