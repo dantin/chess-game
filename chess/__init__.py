@@ -1,41 +1,36 @@
 # -*- coding: utf-8 -*-
+"""chess
 
-DEFAULT_STATE = {
-    'a8': 'br',
-    'b8': 'bn',
-    'c8': 'bb',
-    'd8': 'bq',
-    'e8': 'bk',
-    'f8': 'bb',
-    'g8': 'bn',
-    'h8': 'br',
-    'a7': 'bp',
-    'b7': 'bp',
-    'c7': 'bp',
-    'd7': 'bp',
-    'e7': 'bp',
-    'f7': 'bp',
-    'g7': 'bp',
-    'h7': 'bp',
-    'a2': 'wp',
-    'b2': 'wp',
-    'c2': 'wp',
-    'd2': 'wp',
-    'e2': 'wp',
-    'f2': 'wp',
-    'g2': 'wp',
-    'h2': 'wp',
-    'a1': 'wr',
-    'b1': 'wn',
-    'c1': 'wb',
-    'd1': 'wq',
-    'e1': 'wk',
-    'f1': 'wb',
-    'g1': 'wn',
-    'h1': 'wr'
-}
+A library which is used for chess game GIF generation.
 
-# COLUMNS is in [a-h]
+:copyright: @ 2019 by dantin.
+:liencse: BSD
+
+"""
+
+import os
+
+
+# chesspieces
+KING, QUEEN, BISHOP, KNIGHT, ROCK, PAWN = 'k', 'q', 'b', 'n', 'r', 'p'
+# COLORS
+BLACK, WHITE = 'b', 'w'
+
+# COLORS stands for `black` and `white`.
+COLORS = (BLACK, WHITE)
+# PIECES stands for chesspiece, which are `king`, `queen`, `bishop`, `knight`, `rock` and `pawn`.
+PIECES = (KING, QUEEN, BISHOP, KNIGHT, ROCK, PAWN)
+
+# COLUMNS is in [`a`, `h`] including.
 COLUMNS = [chr(ord('a') + i) for i in range(8)]
-# ROWS is in [1-8]
+# ROWS is in [`1`, `8`] including.
 ROWS = [chr(ord('1') + i) for i in range(8)]
+
+EMPTY_STATE = 'empty'
+
+
+def list_supported_state_files():
+    """load_supported_states returns predefined state dict."""
+    states_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'state')
+    return dict((os.path.splitext(os.path.basename(fn))[0], os.path.join(states_dir, fn))
+                for fn in os.listdir(states_dir))

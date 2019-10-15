@@ -1,59 +1,47 @@
 # -*- coding: utf-8 -*-
+"""Bootstrap scripts for chess game utilities."""
 
 import argparse
-import glob
 import logging
 import os
 import sys
 
-from chess import DEFAULT_STATE, ROWS, COLUMNS
 from chess.board import Board
-from chess.files import load_state_from_file
+from chess.codec import load_moves_from_file, load_state_from_file, save_image_to_file
+from chess.game import load_empty_state
+from chess import list_supported_state_files, EMPTY_STATE
 
 
-logger = logging.getLogger('ROOT')
+LOGGER = logging.getLogger('ROOT')
 
 
-def load_state(arg):
-    valid_params = ('empty', 'default')
-
-    state = {c + r: '' for c in COLUMNS for r in ROWS}
-    current_state = {}
-
-    if os.path.isfile(arg):
-        logger.debug('using init state by file')
-        current_state = load_state_from_file(arg)
-    elif arg not in valid_params:
-        logger.warning('init_state should be one of [%s]', ' | '.join(valid_params))
-        logger.debug('using empty state')
-    elif arg == 'default':
-        logger.debug('using default state')
-        current_state = DEFAULT_STATE
-
-    for cord, tp in current_state.items():
-        state[cord] = tp
-
-    return state
-
-
-def parse_args():
+def init():
+    """ init runs initialization."""
     # logging setup.
     default_handler = logging.StreamHandler()
     default_handler.setFormatter(logging.Formatter(
         '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
     ))
-    logger.addHandler(default_handler)
+    LOGGER.addHandler(default_handler)
+
+
+def parse_args():
+    """parse_args parses command line arguments."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
-    parser.add_argument('-i', '--init_state', help='initialize board state: empty, default, or the target state file path', default='default')
-    parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.6)
+    parser.add_argument('-i', '--init_state', default='default',
+                        help='initialize board state: empty, default, or target state file path')
+    parser.add_argument('-d', '--delay', help='delay between moves in seconds', default=1.62)
     parser.add_argument('-o', '--out', help='name of the output folder', default=os.getcwd())
     parser.add_argument('--black', help='color of the black in hex', default='#4B7399')
     parser.add_argument('--white', help='color of the white in hex', default='#EAE9D2')
-    parser.add_argument('--font_path', help='path of the display font used in board', default='/Library/Fonts/Arial.ttf')
-    parser.add_argument('-L','--level', choices=('debug', 'info', 'warn'), help='log level: debug, info', default='info')
-    parser.add_argument('-V','--version', help='print version information', action='store_true')
+    parser.add_argument('--font_path', default='/Library/Fonts/Arial.ttf',
+                        help='path of the display font used in board')
+    parser.add_argument('-v', '--verbose', help='print final board state', action='store_true')
+    parser.add_argument('-L', '--level', choices=('debug', 'info', 'warn'), default='info',
+                        help='log level: debug, info')
+    parser.add_argument('-V', '--version', help='print version information', action='store_true')
     args = parser.parse_args()
 
     if args.version:
@@ -61,37 +49,82 @@ def parse_args():
         sys.exit(0)
 
     if args.level == 'debug':
-        logger.setLevel(logging.DEBUG)
+        LOGGER.setLevel(logging.DEBUG)
     elif args.level == 'warn':
-        logger.setLevel(logging.WARNING)
+        LOGGER.setLevel(logging.WARNING)
     else:
-        logger.setLevel(logging.INFO)
+        LOGGER.setLevel(logging.INFO)
 
     return args
 
 
+def load_state(param):
+    """parse_state returns."""
+    supported_states = list_supported_state_files()
+    state = load_empty_state()
+
+    if os.path.isfile(param):
+        LOGGER.debug('using init state by file')
+        state_path = param
+    elif param in supported_states.keys():
+        LOGGER.debug('using %s state', param)
+        state_path = supported_states[param]
+    else:
+        LOGGER.warning('using empty state, the init_state should be one of [%s]',
+                       ' | '.join(supported_states.keys()))
+        state_path = supported_states[EMPTY_STATE]
+
+    current_state = load_state_from_file(state_path)
+
+    for pos, piece in current_state.items():
+        state[pos] = piece
+
+    return state_path, state
+
+
+def image_name(output_dir, filename):
+    """output_image_name returns the output image name."""
+    name, _ = os.path.splitext(os.path.basename(filename))
+    output_file = os.path.join(output_dir, name + '.gif')
+    return output_file, os.path.exists(output_file)
+
+
 def main():
+    """The main function."""
     args = parse_args()
 
-    logger.debug('load state')
-    state = load_state(args.init_state)
+    LOGGER.debug('load init state')
+    state_path, state = load_state(args.init_state)
 
-    logger.debug('create chess board')
-    board = Board(args.white, args.black, args.font_path)
+    LOGGER.debug('create chess board')
+    board = Board(state, args.white, args.black, args.font_path, args.verbose)
 
-    logger.debug('initialize board state')
-    board.init_board(state)
-
-    logger.debug('render picture')
     if not args.path:
-        board.render(args.out, args.delay)
+        name, is_exists = image_name(args.out, state_path)
+        if is_exists:
+            LOGGER.info('gif with name "%s" already exists, skip', name)
+        else:
+            moves = []
+            images = board.render(moves)
+            LOGGER.debug('creating "%s"...', name)
+            save_image_to_file(name, images, args.delay)
 
     for path in args.path:
         if os.path.isfile(path):
-            board.render(args.out, args.delay, path)
+            name, is_exists = image_name(args.out, path)
+            if is_exists:
+                LOGGER.info('gif with name "%s" already exists, skip', name)
+                continue
 
-    logger.debug('finish')
+            moves = load_moves_from_file(path)
+            images = board.render(moves)
+            LOGGER.debug('creating "%s"...', name)
+            save_image_to_file(name, images, args.delay)
+            # reset state.
+            board.game.state = state
 
 
 if __name__ == '__main__':
+    init()
     main()
+    LOGGER.debug('finish')
