@@ -16,14 +16,13 @@ with io.open('chess/__init__.py', 'rt', encoding='utf8') as f:
 setup(
     name='chess',
     version=VERSION,
-    description='Chess Game Utilities',
+    description='Chess Game utilities',
     long_description=README,
     author='David Ding',
     author_email='chengjie.ding@gmail.com',
     url='https://github.com/dantin/chess-game',
     license='BSD',
-    packages=find_packages(exclude=('tests', 'input', 'output', 'coverage_html_report',
-                                    '*.egg-info')),
+    packages=find_packages(exclude=('tests', 'misc', 'htmlcov', '*.egg-info')),
     install_requires=[
         'imageio>=2.6.1',
         'numpy>=1.17.2',
