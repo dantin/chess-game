@@ -1,7 +1,7 @@
 
-DEFAULT: vet
+DEFAULT: test
 
-.PHONY: vet
-vet:
-	@echo "validate python code"
-	@pylint chess
+.PHONY: test
+test:
+	@echo "Run unit tests"
+	@tox

@@ -51,10 +51,10 @@ def coordinates_of_square(crd):
     return (col * SQUARE_EDGE + BOARD_MARGIN, (7 - row) * SQUARE_EDGE + BOARD_MARGIN)
 
 
-class Board(): # pylint: disable=too-few-public-methods
+class Board():  # pylint: disable=too-few-public-methods
     """Board is a class that represents chess board."""
 
-    def __init__(self, init_state,
+    def __init__(self, init_state,  # pylint: disable=too-many-arguments
                  white_color='#EAE9D2', black_color='#4B7399',
                  font_path='/Library/Fonts/Arial.ttf',
                  is_white_run=True,
@@ -83,8 +83,8 @@ class Board(): # pylint: disable=too-few-public-methods
         self.game = Game(init_state, is_white_run=is_white_run)
 
     def _clear(self, image, crd):
-        if (crd[0] < (BOARD_EDGE + BOARD_MARGIN)
-                and crd[1] < (BOARD_EDGE + BOARD_MARGIN)):
+        if (crd[0] < (BOARD_EDGE + BOARD_MARGIN) and
+                crd[1] < (BOARD_EDGE + BOARD_MARGIN)):
             if (crd[0] + crd[1] - 2 * BOARD_MARGIN) % (SQUARE_EDGE * 2) == 0:
                 image.paste(self.white_square, crd, self.white_square)
             else:
@@ -142,7 +142,6 @@ class Board(): # pylint: disable=too-few-public-methods
                 board_image.paste(img, (row + BOARD_MARGIN, col + BOARD_MARGIN), img)
         return board_image
 
-
     def _apply_move(self, board_image, current, previous):
         changed = [s for s in current.keys() if current[s] != previous[s]]
 
@@ -151,7 +150,7 @@ class Board(): # pylint: disable=too-few-public-methods
             self._clear(board_image, crd)
 
             if current[square] != '':
-                pt = current[square] # pylint: disable=invalid-name
+                pt = current[square]  # pylint: disable=invalid-name
                 img = self.chesspieces[pt]
                 board_image.paste(img, crd, img)
 
