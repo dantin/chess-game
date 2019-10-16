@@ -179,7 +179,7 @@ class Board(): # pylint: disable=too-few-public-methods
         empty_board = self._init_board()
         initial_board = self._update_state(empty_board)
 
-        LOGGER.debug('remove "x" in each move')
+        LOGGER.debug('filter out "x" in each move')
         moves = [x.replace('x', '') for x in moves]
 
         LOGGER.debug('render moves on board')

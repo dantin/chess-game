@@ -28,7 +28,7 @@ def init():
 def parse_args():
     """parse_args parses command line arguments."""
 
-    parser = argparse.ArgumentParser('main')
+    parser = argparse.ArgumentParser('main.py')
     subparsers = parser.add_subparsers(help='sub-command help')
 
     parser_image = subparsers.add_parser('image', help='tool that generates GIF picture')
@@ -68,14 +68,19 @@ def parse_args():
     return args
 
 
-def setup_log_level(level):
-    """setup_log_level set log level."""
-    if level == 'debug':
-        LOGGER.setLevel(logging.DEBUG)
-    elif level == 'warn':
-        LOGGER.setLevel(logging.WARNING)
-    else:
-        LOGGER.setLevel(logging.INFO)
+def logger(func):
+    """logger decorator sets logger level."""
+    def wrapper(args):
+        level = args.level
+        if level == 'debug':
+            LOGGER.setLevel(logging.DEBUG)
+        elif level == 'warn':
+            LOGGER.setLevel(logging.WARNING)
+        else:
+            LOGGER.setLevel(logging.INFO)
+        func(args)
+
+    return wrapper
 
 
 def load_state(param):
@@ -108,9 +113,9 @@ def image_name(output_dir, filename):
     return output_file, os.path.exists(output_file)
 
 
+@logger
 def run_image(args):
     """image sub-command function."""
-    setup_log_level(args.level)
 
     LOGGER.debug('load init state')
     state_path, state = load_state(args.init_state)
@@ -146,10 +151,9 @@ def run_image(args):
             board.game.state = state
 
 
+@logger
 def run_manual(args):
     """manual sub-command function."""
-    setup_log_level(args.level)
-
     LOGGER.debug('run manual')
 
     move_holder = '...'
