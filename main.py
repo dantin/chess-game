@@ -28,35 +28,54 @@ def init():
 def parse_args():
     """parse_args parses command line arguments."""
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('path', nargs='*', help='path to the pgn file/folder')
-    parser.add_argument('-i', '--init_state', default='default',
-                        help='initialize board state: empty, default, or target state file path')
-    parser.add_argument('-d', '--delay', default=1.62, help='delay between moves in seconds')
-    parser.add_argument('-o', '--out', default=os.getcwd(), help='name of the output folder')
-    parser.add_argument('-b', '--black_first', help='run black first', action='store_true')
-    parser.add_argument('--black', default='#4B7399', help='color of the black in hex')
-    parser.add_argument('--white', default='#EAE9D2', help='color of the white in hex')
-    parser.add_argument('--font_path', default='/Library/Fonts/Arial.ttf',
-                        help='path of the display font used in board')
-    parser.add_argument('-v', '--verbose', help='print final board state', action='store_true')
-    parser.add_argument('-L', '--level', choices=('debug', 'info', 'warn'), default='info',
-                        help='log level: debug, info')
+    parser = argparse.ArgumentParser('main')
+    subparsers = parser.add_subparsers(help='sub-command help')
+
+    parser_image = subparsers.add_parser('image', help='tool that generates GIF picture')
+    parser_image.add_argument('path', nargs='*', help='path to the pgn file/folder')
+    parser_image.add_argument('-i', '--init_state', default='default',
+                              help='initialize board state:'
+                              ' empty, default, or target state file path')
+    parser_image.add_argument('-d', '--delay', default=1.62, help='delay between moves in seconds')
+    parser_image.add_argument('-o', '--out', default=os.getcwd(), help='name of the output folder')
+    parser_image.add_argument('-b', '--black_first', help='run black first', action='store_true')
+    parser_image.add_argument('--black', default='#4B7399', help='color of the black in hex')
+    parser_image.add_argument('--white', default='#EAE9D2', help='color of the white in hex')
+    parser_image.add_argument('--font_path', default='/Library/Fonts/Arial.ttf',
+                              help='path of the display font used in board')
+    parser_image.add_argument('-v', '--verbose', help='print final board state',
+                              action='store_true')
+    parser_image.add_argument('-L', '--level', choices=('debug', 'info', 'warn'), default='info',
+                              help='log level: debug, info')
+    parser_image.set_defaults(func=run_image)
+
+    parser_manual = subparsers.add_parser('manual', help='tool that loads chess manual text')
+    parser_manual.add_argument('path', nargs='*', help='path to the pgn file/folder')
+    parser_manual.add_argument('-n', '--num', default=1, type=int, help='start number')
+    parser_manual.add_argument('-b', '--black_first', help='run black first', action='store_true')
+    parser_manual.add_argument('-L', '--level', choices=('debug', 'info', 'warn'), default='info',
+                               help='log level: debug, info')
+    parser_manual.set_defaults(func=run_manual)
+
     parser.add_argument('-V', '--version', help='print version information', action='store_true')
+
     args = parser.parse_args()
 
     if args.version:
-        print('Build dynamic GIF picture of Chess Game, version 1.0')
+        print('Tools of Chess Game, version 1.0')
         sys.exit(0)
 
-    if args.level == 'debug':
+    return args
+
+
+def setup_log_level(level):
+    """setup_log_level set log level."""
+    if level == 'debug':
         LOGGER.setLevel(logging.DEBUG)
-    elif args.level == 'warn':
+    elif level == 'warn':
         LOGGER.setLevel(logging.WARNING)
     else:
         LOGGER.setLevel(logging.INFO)
-
-    return args
 
 
 def load_state(param):
@@ -71,14 +90,13 @@ def load_state(param):
         LOGGER.debug('using %s state', param)
         state_path = supported_states[param]
     else:
-        LOGGER.warning('using empty state, the init_state should be one of [%s]',
-                       ' | '.join(supported_states.keys()))
+        LOGGER.debug('init state should be one of [%s]',
+                     '|'.join(supported_states.keys()))
+        LOGGER.debug('using empty state by default')
         state_path = supported_states[EMPTY_STATE]
 
     current_state = load_state_from_file(state_path)
-
-    for pos, piece in current_state.items():
-        state[pos] = piece
+    state.update(current_state)
 
     return state_path, state
 
@@ -90,9 +108,9 @@ def image_name(output_dir, filename):
     return output_file, os.path.exists(output_file)
 
 
-def main():
-    """The main function."""
-    args = parse_args()
+def run_image(args):
+    """image sub-command function."""
+    setup_log_level(args.level)
 
     LOGGER.debug('load init state')
     state_path, state = load_state(args.init_state)
@@ -126,6 +144,38 @@ def main():
             save_image_to_file(name, images, args.delay)
             # reset state.
             board.game.state = state
+
+
+def run_manual(args):
+    """manual sub-command function."""
+    setup_log_level(args.level)
+
+    LOGGER.debug('run manual')
+
+    move_holder = '...'
+    item_sep, move_sep = ', ', '; '
+
+    def pair_chunks(moves, idx=1):
+        step = 2
+        for i in range(0, len(moves), step):
+            chunk = moves[i:i+step]
+            if len(chunk) == 1:
+                chunk += [move_holder]
+            yield '{}. {}'.format(idx, item_sep.join(chunk))
+            idx += 1
+
+    for path in args.path:
+        if os.path.isfile(path):
+            moves = load_moves_from_file(path)
+            if args.black_first:
+                moves = [move_holder] + moves
+            print(move_sep.join(pair_chunks(moves, idx=args.num)))
+
+
+def main():
+    """The main function."""
+    args = parse_args()
+    args.func(args)
 
 
 if __name__ == '__main__':
