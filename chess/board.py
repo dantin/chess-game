@@ -29,7 +29,7 @@ def _get_text_loc(text, font, box):
     return left, top
 
 
-def _show_copyright(initial_board, text='Made by @淞南北丁巷',
+def _show_copyright(initial_board, text='头条@淞南北丁巷',
                     font_path='/Library/Fonts/Arial Unicode.ttf'):
     font_size = int(FONT_SIZE * 2.5)
     LOGGER.debug('setup copyright font by "%s", size %s', font_path, font_size)
@@ -178,6 +178,9 @@ class Board(): # pylint: disable=too-few-public-methods
         LOGGER.debug('initialize board state')
         empty_board = self._init_board()
         initial_board = self._update_state(empty_board)
+
+        LOGGER.debug('filter out "x" in each move')
+        moves = [x.replace('x', '') for x in moves]
 
         LOGGER.debug('render moves on board')
         images = self._create_images(initial_board, moves)
