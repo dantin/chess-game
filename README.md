@@ -66,6 +66,10 @@ optional arguments:
 
 ### How To
 
+#### Setup DEV
+
+    pip install -r requirements/dev.txt
+
 #### Convert GIF to PNG
 
 Here is a example that convert `file.gif` to `file.png`.
