@@ -11,7 +11,7 @@ A library which is used for chess game GIF generation.
 import os
 
 
-__version__ = '1.0.0-git'
+__version__ = '1.0.0.dev0'
 
 # chesspieces
 KING, QUEEN, BISHOP, KNIGHT, ROCK, PAWN = 'k', 'q', 'b', 'n', 'r', 'p'
