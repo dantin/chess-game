@@ -2,11 +2,11 @@
 
 import pytest
 
-from chess.game import load_empty_state, check_knight_move, check_line
+from chess.game import load_empty_state, check_knight_move, check_line, check_diagonal
 
 
 @pytest.fixture(scope='function')
-def empty_board():
+def state():
     # print(' SETUP board')
     yield load_empty_state()
     # print(' TEARDOWN board')
@@ -54,5 +54,17 @@ def test_check_knight_move(lhs, rhs, expected):
         ('a5', 'e4', False),
     ]
 )
-def test_check_line(empty_board, lhs, rhs, expected):
-    assert check_line(empty_board, lhs, rhs) == expected
+def test_check_line(state, lhs, rhs, expected):
+    assert check_line(state, lhs, rhs) == expected
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        ('a1', 'b2', True),
+        ('d3', 'f1', True),
+        ('a1', 'c8', False),
+    ]
+)
+def test_check_diagnoal(state, lhs, rhs, expected):
+    assert check_diagonal(state, lhs, rhs) == expected
