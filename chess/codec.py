@@ -13,7 +13,7 @@ LOGGER = logging.getLogger('ROOT')
 def load_moves_from_file(file_path):
     """load_moves_from_file loads moves from file."""
     LOGGER.debug('load moves from file "%s"', file_path)
-    with open(file_path) as f: # pylint: disable=invalid-name
+    with open(file_path) as f:
         data = f.read()
         data = re.sub(r'\{.*?\}', '', data)  # remove png comments
         return re.findall(
@@ -24,7 +24,7 @@ def load_moves_from_file(file_path):
 def load_state_from_file(file_path):
     """load_state_from_file load initial state from file."""
     LOGGER.debug('load state from file "%s"', file_path)
-    with open(file_path) as f: # pylint: disable=invalid-name
+    with open(file_path) as f:
         data = f.read()
         pairs = re.findall(
             r'[a-h][1-8]=[wb][bknrqp]',

@@ -1,0 +1,2 @@
+# unit tests dependency
+pytest>=5.2.1

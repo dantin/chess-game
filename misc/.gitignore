@@ -1,0 +1,5 @@
+!input/sample.pgn
+!input/state.bd
+
+output/*
+!output/.gitkeep

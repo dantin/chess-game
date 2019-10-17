@@ -105,8 +105,6 @@ venv.bak/
 
 .DS_Store
 
-output/*
-!output/.gitkeep
-input/*
-!input/.gitkeep
 *.pgn
+*.bd
+*.gif

@@ -9,7 +9,7 @@ import sys
 from chess.board import Board
 from chess.codec import load_moves_from_file, load_state_from_file, save_image_to_file
 from chess.game import load_empty_state
-from chess import list_supported_state_files, EMPTY_STATE
+from chess import list_supported_state_files, EMPTY_STATE, __version__
 
 
 LOGGER = logging.getLogger('ROOT')
@@ -62,7 +62,7 @@ def parse_args():
     args = parser.parse_args()
 
     if args.version:
-        print('Tools of Chess Game, version 1.0')
+        print('Tools of Chess Game, version ', __version__)
         sys.exit(0)
 
     return args
@@ -162,7 +162,7 @@ def run_manual(args):
     def pair_chunks(moves, idx=1):
         step = 2
         for i in range(0, len(moves), step):
-            chunk = moves[i:i+step]
+            chunk = moves[i:i + step]
             if len(chunk) == 1:
                 chunk += [move_holder]
             yield '{}. {}'.format(idx, item_sep.join(chunk))

@@ -27,7 +27,7 @@ def check_line(state, lhs, rhs):
     row_2, col_2 = int(rhs[1]), rhs[0]
 
     if row_1 == row_2:
-        i1, i2 = ord(col_1) - ord('a'), ord(col_2) - ord('a') # pylint: disable=invalid-name
+        i1, i2 = ord(col_1) - ord('a'), ord(col_2) - ord('a')
         return all(state[COLUMNS[i] + str(row_1)] == ''
                    for i in range(min(i1, i2) + 1, max(i1, i2)))
     if col_1 == col_2:
@@ -56,9 +56,8 @@ def check_diagonal(state, lhs, rhs):
     return False
 
 
-class Game(): # pylint: disable=too-few-public-methods
+class Game():  # pylint: disable=too-few-public-methods
     """Game is a class that represents chess game."""
-    # pylint: disable=invalid-name
 
     def __init__(self, state, is_white_run=True):
         self.is_white_run = is_white_run
