@@ -58,14 +58,19 @@ def parse_args():
     parser_manual.set_defaults(func=run_manual)
 
     parser.add_argument('-V', '--version', help='print version information', action='store_true')
+    parser.set_defaults(func=print_version)
 
     args = parser.parse_args()
 
     if args.version:
-        print('Tools of Chess Game, version ', __version__)
+        print_version()
         sys.exit(0)
 
     return args
+
+
+def print_version(args):
+    print('Tools of Chess Game, version ', __version__)
 
 
 def logger(func):
